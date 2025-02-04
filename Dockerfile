@@ -1,0 +1,25 @@
+# Використовуємо Python 3.9.6
+FROM python:3.9.6
+
+# Встановлюємо робочу директорію всередині контейнера
+WORKDIR /app
+
+# Встановлюємо необхідні системні бібліотеки для OpenCV
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0
+
+# Копіюємо тільки необхідні файли для зменшення розміру контейнера
+COPY requirements.txt .
+COPY setup.py .
+COPY src ./src
+COPY models ./models
+
+# Встановлюємо залежності
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Додаємо шлях до Python-модулів
+ENV PYTHONPATH="/app"
+
+# Вказуємо стандартну команду
+CMD ["python", "src/training/train.py"]

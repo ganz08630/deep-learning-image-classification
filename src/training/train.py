@@ -1,6 +1,7 @@
 import tensorflow as tf
 import os
-from dataset_loader import load_dataset
+from src.datasets.dataset_loader import load_dataset
+#from dataset_loader import load_dataset
 from model_builder import build_model
 
 # Параметри тренування

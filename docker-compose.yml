@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: image-classifier
+    build: .
+    command: python src/inference/predict.py test_images/dog.jpg
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on: []
