@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0
 
-# Копіюємо тільки необхідні файли для зменшення розміру контейнера
+# Копіюємо необхідні файли
 COPY requirements.txt .
 COPY setup.py .
 COPY src ./src
@@ -21,5 +21,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Додаємо шлях до Python-модулів
 ENV PYTHONPATH="/app"
 
-# Вказуємо стандартну команду
-CMD ["python", "src/training/train.py"]
+# Вказуємо стандартну команду для запуску API
+CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000"]
+
