@@ -14,6 +14,10 @@ COPY requirements.txt .
 COPY setup.py .
 COPY src ./src
 COPY models ./models
+COPY src/frontend ./src/frontend 
+
+
+
 
 # Встановлюємо залежності
 RUN pip install --no-cache-dir -r requirements.txt

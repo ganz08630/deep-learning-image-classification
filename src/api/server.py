@@ -3,7 +3,18 @@ from PIL import Image
 import io
 from src.inference.predict import predict_image  # Використовуємо нашу оновлену функцію
 
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+
 app = FastAPI()
+
+# Додаємо роздачу статичних файлів (CSS, JS, фронтенд)
+app.mount("/frontend", StaticFiles(directory="/app/src/frontend"), name="frontend")
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    with open("/app/src/frontend/index.html", "r") as f:
+        return f.read()
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
