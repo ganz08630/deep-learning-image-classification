@@ -4,10 +4,12 @@ FROM python:3.9.6
 # Встановлюємо робочу директорію всередині контейнера
 WORKDIR /app
 
-# Встановлюємо необхідні системні бібліотеки для OpenCV
+# Встановлюємо необхідні бібліотеки
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
-    libglib2.0-0
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*  # Видаляємо кеш для зменшення розміру контейнера
+
 
 # Копіюємо необхідні файли
 COPY requirements.txt .
@@ -15,9 +17,6 @@ COPY setup.py .
 COPY src ./src
 COPY models ./models
 COPY src/frontend ./src/frontend 
-
-
-
 
 # Встановлюємо залежності
 RUN pip install --no-cache-dir -r requirements.txt
