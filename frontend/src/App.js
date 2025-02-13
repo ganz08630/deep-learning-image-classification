@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import { motion } from "framer-motion";
@@ -6,9 +6,29 @@ import { motion } from "framer-motion";
 const App = () => {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(() => JSON.parse(localStorage.getItem("logs")) || []);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem("logs", JSON.stringify(logs));
+  }, [logs]);
+
+  const logMessage = (message) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const newLog = `${timestamp} - ${message}`;
+    setLogs((prev) => [...prev, newLog]);
+    console.log(newLog);
+    sendLogToServer(newLog);
+  };
+
+  const sendLogToServer = async (log) => {
+    try {
+      await axios.post("http://127.0.0.1:8000/logs/", { log });
+    } catch (error) {
+      console.error("Не вдалося відправити лог на сервер");
+    }
+  };
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: "image/*",
@@ -16,7 +36,7 @@ const App = () => {
       const file = acceptedFiles[0];
       setImage(file);
       setPreview(URL.createObjectURL(file));
-      setLogs((prev) => [...prev, "📤 Фото вибрано"]);
+      logMessage("📤 Фото вибрано");
     },
   });
 
@@ -27,16 +47,16 @@ const App = () => {
     }
 
     setLoading(true);
-    setLogs((prev) => [...prev, "📡 Відправка фото..."]);
+    logMessage("📡 Відправка фото...");
 
     const formData = new FormData();
     formData.append("file", image);
 
     try {
       const response = await axios.post("http://127.0.0.1:8000/predict/", formData);
-      setLogs((prev) => [...prev, `✅ Результат: ${response.data.prediction} (${response.data.confidence})`]);
+      logMessage(`✅ Результат: ${response.data.prediction} (${response.data.confidence})`);
     } catch (error) {
-      setLogs((prev) => [...prev, "❌ Помилка при відправці"]);
+      logMessage("❌ Помилка при відправці");
       alert("❌ Сталася помилка! Переконайтеся, що сервер запущений.");
     } finally {
       setLoading(false);
@@ -45,7 +65,6 @@ const App = () => {
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
-      {/* Тема */}
       <button
         onClick={() => setDarkMode(!darkMode)}
         className="absolute top-4 right-4 bg-blue-500 px-4 py-2 text-white rounded hover:bg-blue-600"
@@ -55,7 +74,6 @@ const App = () => {
 
       <h1 className="text-3xl font-bold mb-6">Класифікація зображень</h1>
 
-      {/* Dropzone */}
       <motion.div
         {...getRootProps()}
         className="border-2 border-dashed border-gray-500 p-8 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-700 transition w-80"
@@ -69,7 +87,6 @@ const App = () => {
         )}
       </motion.div>
 
-      {/* Кнопка відправки */}
       <button
         onClick={handleUpload}
         className={`mt-4 px-6 py-3 text-white rounded transition ${
@@ -80,7 +97,6 @@ const App = () => {
         {loading ? "⏳ Обробка..." : "🚀 Відправити"}
       </button>
 
-      {/* Логи */}
       <div className="mt-6 w-80">
         <h2 className="text-xl font-semibold mb-2">📜 Логи</h2>
         <motion.div
