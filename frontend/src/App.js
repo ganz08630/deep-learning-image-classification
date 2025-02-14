@@ -30,6 +30,12 @@ const App = () => {
     }
   };
 
+  const clearLogs = () => {
+    setLogs([]);
+    localStorage.removeItem("logs");
+    logMessage("🗑 Логи очищено");
+  };
+
   const { getRootProps, getInputProps } = useDropzone({
     accept: "image/*",
     onDrop: (acceptedFiles) => {
@@ -56,8 +62,16 @@ const App = () => {
       const response = await axios.post("http://127.0.0.1:8000/predict/", formData);
       logMessage(`✅ Результат: ${response.data.prediction} (${response.data.confidence})`);
     } catch (error) {
-      logMessage("❌ Помилка при відправці");
-      alert("❌ Сталася помилка! Переконайтеся, що сервер запущений.");
+      if (error.response) {
+        logMessage(`❌ Серверна помилка (${error.response.status}): ${error.response.data.error || "Невідома помилка"}`);
+        alert(`❌ Серверна помилка (${error.response.status}): ${error.response.data.error || "Невідома помилка"}`);
+      } else if (error.request) {
+        logMessage("❌ Сервер не відповідає. Перевірте, чи він запущений.");
+        alert("❌ Сервер не відповідає. Переконайтеся, що він запущений і доступний.");
+      } else {
+        logMessage(`❌ Помилка налаштування запиту: ${error.message}`);
+        alert(`❌ Помилка запиту: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -117,6 +131,12 @@ const App = () => {
             </motion.p>
           ))}
         </motion.div>
+        <button
+          onClick={clearLogs}
+          className="mt-4 bg-red-500 px-4 py-2 text-white rounded hover:bg-red-600 w-full"
+        >
+          🗑 Очистити логи
+        </button>
       </div>
     </div>
   );
