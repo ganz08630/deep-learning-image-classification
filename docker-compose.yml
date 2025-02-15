@@ -13,3 +13,15 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped  # Автоперезапуск, якщо контейнер падає
+
+  bot:
+    container_name: telegram-bot
+    build: ./src/bot  # Використовує Dockerfile з папки бота
+    volumes:
+      - .:/app
+    working_dir: /app/src/bot
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - app  # Бот запускається після бекенду
+    restart: unless-stopped
