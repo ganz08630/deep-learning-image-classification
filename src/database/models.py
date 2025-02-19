@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 import datetime
 import os
 
@@ -8,14 +7,14 @@ import os
 DB_PATH = os.path.join(os.path.dirname(__file__), "database.db")
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-# Створюємо підключення до БД
+# Підключаємо ORM
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Базовий клас для ORM
+# Базовий клас для моделей
 Base = declarative_base()
 
-# Оголошуємо модель таблиці `predictions`
+# Оголошуємо модель таблиці predictions
 class Prediction(Base):
     __tablename__ = "predictions"
 
@@ -27,7 +26,7 @@ class Prediction(Base):
     confidence = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-# Функція ініціалізації БД
+# Функція ініціалізації БД (не потрібна при використанні Alembic)
 def init_db():
     Base.metadata.create_all(bind=engine)
 
