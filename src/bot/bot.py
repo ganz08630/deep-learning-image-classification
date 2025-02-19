@@ -1,11 +1,19 @@
 import logging
 import aiohttp
 import asyncio
+import sys
+import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ContentType
 from aiogram.filters import Command
 from aiogram.client.session.aiohttp import AiohttpSession
 from config import BOT_TOKEN, API_URL
+#from src.database.database import save_prediction  # Імпорт функції збереження в БД
+#from ..database.database import save_prediction  # Імпорт функції збереження в БД
+
+# Додаємо кореневу папку в sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from src.database.database import save_prediction  # Тепер імпорт має працювати
 
 # Налаштовуємо логування
 logging.basicConfig(level=logging.INFO)
@@ -19,13 +27,8 @@ dp = Dispatcher()
 async def send_welcome(message: types.Message):
     await message.answer("Привіт! Надішли мені фото, і я його класифікую 🚀")
 
-@dp.message(lambda msg: msg.photo, flags={"content_types": ContentType.PHOTO})
-async def handle_photo(message: types.Message):
-    photo = message.photo[-1]  # Беремо найбільше фото
-    file_info = await bot.get_file(photo.file_id)
-    file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info.file_path}"
-
-    # Завантажуємо фото і надсилаємо його FastAPI
+async def fetch_prediction(file_url: str):
+    """Відправляє зображення на FastAPI і отримує відповідь"""
     async with aiohttp.ClientSession() as session:
         async with session.get(file_url) as resp:
             image_data = await resp.read()
@@ -34,12 +37,29 @@ async def handle_photo(message: types.Message):
         form.add_field("file", image_data, filename="image.jpg", content_type="image/jpeg")
 
         async with session.post(API_URL, data=form) as resp:
-            result = await resp.json()
+            return await resp.json()
 
+@dp.message(lambda msg: msg.photo, flags={"content_types": ContentType.PHOTO})
+async def handle_photo(message: types.Message):
+    photo = message.photo[-1]  # Беремо найбільше фото
+    file_info = await bot.get_file(photo.file_id)
+    file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info.file_path}"
+
+    # Отримуємо результат класифікації
+    result = await fetch_prediction(file_url)
     prediction = result.get("prediction", "❌ Помилка")
     confidence = result.get("confidence", "?")
 
-    await message.answer(f"✅ Результат: {prediction} ({confidence})")
+    # Зберігаємо в БД
+    save_prediction(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+        file_path=file_url,
+        prediction=prediction,
+        confidence=confidence
+    )
+
+    await message.answer(f"✅ Результат: {prediction} ({confidence}%)")
 
 
 async def main():

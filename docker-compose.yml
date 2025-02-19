@@ -22,6 +22,7 @@ services:
     working_dir: /app/src/bot
     environment:
       - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
     depends_on:
       - app  # Бот запускається після бекенду
     restart: unless-stopped

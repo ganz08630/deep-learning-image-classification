@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 
 # Копіюємо необхідні файли
 COPY requirements.txt .
-COPY setup.py .
+#COPY setup.py .
 COPY src ./src
 COPY models ./models
 COPY src/frontend ./src/frontend 
