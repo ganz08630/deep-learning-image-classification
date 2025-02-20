@@ -8,8 +8,6 @@ from aiogram.types import ContentType
 from aiogram.filters import Command
 from aiogram.client.session.aiohttp import AiohttpSession
 from config import BOT_TOKEN, API_URL
-#from src.database.database import save_prediction  # Імпорт функції збереження в БД
-#from ..database.database import save_prediction  # Імпорт функції збереження в БД
 
 # Додаємо кореневу папку в sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -50,16 +48,21 @@ async def handle_photo(message: types.Message):
     prediction = result.get("prediction", "❌ Помилка")
     confidence = result.get("confidence", "?")
 
+    try:
+        confidence_value = float(confidence.replace("%", ""))  # Прибираємо '%' і перетворюємо у float
+    except ValueError:
+        confidence_value = 0.0  # Якщо раптом помилка, ставимо 0.0 (щоб не падало)
+
     # Зберігаємо в БД
     save_prediction(
         user_id=message.from_user.id,
         username=message.from_user.username,
         file_path=file_url,
         prediction=prediction,
-        confidence=confidence
+        confidence=confidence_value
     )
 
-    await message.answer(f"✅ Результат: {prediction} ({confidence}%)")
+    await message.answer(f"✅ Результат: {prediction} ({confidence_value}%)")
 
 
 async def main():

@@ -8,11 +8,9 @@ import os
 DB_PATH = os.path.join(os.path.dirname(__file__), "database.db")
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-# Створюємо підключення до БД
+# Ініціалізуємо підключення до БД
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Базовий клас для ORM
 Base = declarative_base()
 
 # Оголошуємо модель таблиці `predictions`
@@ -26,6 +24,21 @@ class Prediction(Base):
     prediction = Column(String, nullable=False)
     confidence = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+# Функція для збереження передбачення в БД
+def save_prediction(user_id: str, username: str, file_path: str, prediction: str, confidence: str):
+
+    with SessionLocal() as session:
+        new_prediction = Prediction(
+            user_id=user_id,
+            username=username,
+            file_path=file_path,
+            prediction=prediction,
+            confidence=confidence  # Тепер тут float
+        )
+        session.add(new_prediction)
+        session.commit()
+
 
 # Функція ініціалізації БД
 def init_db():
