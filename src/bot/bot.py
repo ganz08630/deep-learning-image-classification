@@ -7,7 +7,9 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.types import ContentType
 from aiogram.filters import Command
 from aiogram.client.session.aiohttp import AiohttpSession
-from config import BOT_TOKEN, API_URL
+#from config import BOT_TOKEN, API_URL
+from src.bot.config import BOT_TOKEN, API_URL
+
 
 # Додаємо кореневу папку в sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -23,7 +25,7 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def send_welcome(message: types.Message):
-    await message.answer("Привіт! Надішли мені фото, і я його класифікую 🚀")
+    await message.answer("Привіт! Я бот.")
 
 async def fetch_prediction(file_url: str):
     """Відправляє зображення на FastAPI і отримує відповідь"""
